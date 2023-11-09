@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Viewer</title>
+    <style>
+        p {
+            color: white;
+            font-family: Noto Sans;
+        }
+        button {
+            background-color: black;
+            color: white;
+            border: 0.1mm solid white;
+            border-right: none;
+            border-left: none;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #158c8c;
+            animation-name: fade;
+            animation-duration: 0.3s;
+        }
+        .labels {
+            margin-top: 0;
+            margin-bottom: 0;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        body {
+            background-color: black;
+        }
+        #button {
+            position: absolute;
+            width: 100%;
+            display: flex;
+        }
+        .but {
+            width: 50%;
+            height: 10vh;
+        }
+        #middle {
+            border: 0.1mm solid #1b7f87;
+            width: 100%;
+            height: 70%;
+            display: flex;
+            flex-direction: column;
+            align-self: center;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #1c1b30;
+            border-radius: 20px;
+            box-shadow: 0px 0px 10px #2a20f7;
+        }
+        .side {
+            border: 0.1mm solid #474747;
+            width: 90%;
+            height: 35%;
+            display: flex;
+            flex-direction: column;
+            align-self: center;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #0f0f0f;
+            border-radius: 20px;
+        }
+        video {
+            border: 0.1mm solid black;
+            flex-shrink: 1;
+            flex-grow: 1;
+            min-height: 0;
+            border-radius: 20px;
+            width: 94%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 3%;
+        }
+        #previews {
+            margin-top: auto;
+            margin-bottom: auto;
+            height: 80vh;
+            display: -webkit-grid;
+            display: grid;
+            -webkit-grid-template-columns: 1fr 2fr 1fr;
+            grid-template-columns: 1fr 2fr 1fr;
+            -webkit-grid-template-rows: 100%;
+            grid-template-rows: 100%;
+        }
+        html, body {
+
+            margin: 0;
+            padding: 0;
+        }
+        #butleft::before {
+            margin-top: 100%;
+            width: 35%;
+            height: 8vh;
+            background-color: white;
+            display: inline-block;
+        }
+        #butright::after {
+            margin-top: 100%;
+            width: 125px;
+  height: 125px;
+
+  /* We slightly move it to the left */
+            top: 400px;
+            content: "";
+            background-color: #a4c9cf;
+            border-radius: 100%;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="button">
+        <button class="but" id="butleft" onclick="shift(-1)">Left</button>
+        <button class="but" id="butright" onclick="shift(1)">Right</button>
+    </div>
+    <div id="previews">
+        <div class="side">
+            <video onplay="fullscreen(0)" controls id="left">
+                <source type="video/mp4">
+            </video>
+            <p class="labels">Test</p>
+        </div>
+        <div id="middle">
+            <video onplay="fullscreen(1)" controls id="center">
+                <source type="video/mp4">
+            </video>
+            <p class="labels"> Test </p>
+        </div>
+        <div class="side">
+            <video onplay="fullscreen(2)" controls id="right">
+                <source type="video/mp4">
+            </video>
+            <p class="labels">Test</p>
+        </div>
+    </div>
+    <p>Copyright Arnav Rawat</p>
+
+    <script>
+        let vids = []
+        let pos = []
+        let prom = fetch("/vids/")
+        prom.then((response) => response.json())
+            .then((data) => {
+                for (fl in data) {
+                    vids.push(data[fl].name)
+                }
+                if (vids.length >= 1) {
+                    let elem = document.getElementById("previews")
+                    for (var i = 0; i < 3; i++) {
+                        elem.children[i].children[0].children[0].setAttribute("src", "/vids/" + vids[i % vids.length])
+                        pos.push(i % vids.length)
+                        elem.children[i].children[1].textContent = vids[i % vids.length]
+                        elem.children[i].children[0].load()
+                    }
+                }
+            })
+            .catch(console.error)
+        function shift(by) {
+            if (vids.length == 0) return
+            let elem = document.getElementById("previews")
+            for (var i = 0; i < 3; i++) {
+                var newpos = (pos[i] + vids.length + by) % vids.length // Ugly hack for lack of modular arithmetic
+                var videlement = elem.children[i].children[0]
+                videlement.children[0].setAttribute("src", "/vids/" + vids[newpos])
+                elem.children[i].children[1].textContent = vids[newpos]
+                pos[i] = newpos
+                videlement.load()
+            }
+        }
+        function fullscreen(idx) {
+            let elem = document.getElementById("previews")
+            elem.children[idx].children[0].requestFullscreen()
+        }
+    </script>
+</body>
+</html>
